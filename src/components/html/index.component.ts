@@ -5,8 +5,7 @@
 import { Component, Input, ViewChild, ElementRef } from '@angular/core'
 import { IComponentProps } from 'src/types'
 import { SafeHtmlPipe } from 'src/pipe/safeHtml.pipe'
-import { parseHtmlWithContent, parseLoadingWithContent } from 'src/utils/util'
-import { set } from 'nprogress'
+import { parseHtmlWithContent, parseLoadingWithContent } from 'src/utils/utils'
 
 @Component({
   standalone: true,

@@ -12,7 +12,7 @@ import { ITagPropValues } from 'src/types'
 import { updateFileContent } from 'src/api'
 import { TAG_PATH } from 'src/constants'
 import { tagList } from 'src/store'
-import { isSelfDevelop } from 'src/utils/util'
+import { isSelfDevelop } from 'src/utils/utils'
 import { NzButtonModule } from 'ng-zorro-antd/button'
 import { NzInputModule } from 'ng-zorro-antd/input'
 import { NzTableModule } from 'ng-zorro-antd/table'
@@ -34,8 +34,8 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm'
   styleUrls: ['./index.component.scss'],
 })
 export default class SystemTagComponent {
-  $t = $t
-  isSelfDevelop = isSelfDevelop
+  readonly $t = $t
+  readonly isSelfDevelop = isSelfDevelop
   tagList: ITagPropValues[] = tagList
   submitting: boolean = false
   incrementId = Math.max(...tagList.map((item) => Number(item.id))) + 1
@@ -46,6 +46,28 @@ export default class SystemTagComponent {
   ) {}
 
   ngOnInit() {}
+
+  // 上移
+  moveUp(index: number): void {
+    if (index === 0) {
+      return
+    }
+    const current = this.tagList[index]
+    const prev = this.tagList[index - 1]
+    this.tagList[index - 1] = current
+    this.tagList[index] = prev
+  }
+
+  // 下移
+  moveDown(index: number): void {
+    if (index === this.tagList.length - 1) {
+      return
+    }
+    const current = this.tagList[index]
+    const next = this.tagList[index + 1]
+    this.tagList[index + 1] = current
+    this.tagList[index] = next
+  }
 
   onColorChange(e: any, idx: number) {
     const color = e.target.value

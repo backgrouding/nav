@@ -12,9 +12,10 @@ import {
   IWebTag,
 } from '../types'
 import { STORAGE_KEY_MAP } from 'src/constants'
+import { CODE_SYMBOL } from 'src/constants/symbol'
 import { isLogin } from './user'
 import { SearchType } from 'src/components/search/index'
-import { websiteList, searchEngineList, settings } from 'src/store'
+import { websiteList, searchEngineList, settings, tagMap } from 'src/store'
 import { $t } from 'src/locale'
 
 export function randomInt(max: number) {
@@ -34,14 +35,28 @@ export function fuzzySearch(
   const { oneIndex, twoIndex } = getClassById(id)
   const sType = Number(type) || SearchType.All
   const navData: IWebProps[] = []
-  const resultList: INavThreeProp[] = [{ nav: navData, id: -1, title: '' }]
+  let resultList: INavThreeProp[] = [
+    { nav: navData, id: -1, title: $t('_searchRes'), icon: '' },
+  ]
   const urlRecordMap = new Map<number, boolean>()
+
+  if (sType === SearchType.Class) {
+    resultList = []
+  }
 
   function f(arr?: any[]) {
     arr = arr || navList
 
     outerLoop: for (let i = 0; i < arr.length; i++) {
       const item = arr[i]
+
+      if (sType === SearchType.Class && item.title) {
+        if (item.nav[0]?.name && item.title.toLowerCase().includes(keyword)) {
+          resultList.push(item)
+          break
+        }
+      }
+
       if (Array.isArray(item.nav)) {
         f(item.nav)
       }
@@ -52,7 +67,7 @@ export function fuzzySearch(
         const name = item.name.toLowerCase()
         const desc = item.desc.toLowerCase()
         const url = item.url.toLowerCase()
-        const isCode = desc[0] === '!'
+        const isCode = desc[0] === CODE_SYMBOL
         if (isCode) {
           continue
         }
@@ -126,6 +141,17 @@ export function fuzzySearch(
           return false
         }
 
+        const searchTags = () => {
+          return item.tags.forEach((tag: IWebTag) => {
+            if (tagMap[tag.id]?.name?.toLowerCase() === keyword) {
+              if (!urlRecordMap.has(item.id)) {
+                urlRecordMap.set(item.id, true)
+                navData.push(item)
+              }
+            }
+          })
+        }
+
         const searchId = (): boolean => {
           if (item.id == keyword) {
             navData.push(item)
@@ -152,6 +178,10 @@ export function fuzzySearch(
               searchQuick()
               break
 
+            case SearchType.Tag:
+              searchTags()
+              break
+
             case SearchType.Id:
               if (searchId()) {
                 break outerLoop
@@ -176,10 +206,9 @@ export function fuzzySearch(
     f()
   }
 
-  if (navData.length <= 0) {
+  if (sType !== SearchType.Class && navData.length <= 0) {
     return []
   }
-
   return resultList
 }
 
@@ -467,7 +496,7 @@ export function getClassById(id: unknown, initValue = 0) {
           if (twoItem.id === id) {
             oneIndex = i
             twoIndex = j
-            breadcrumb.push(item.title)
+            breadcrumb.push(item.title, twoItem.title)
             break outerLoop
           }
         }
@@ -478,7 +507,7 @@ export function getClassById(id: unknown, initValue = 0) {
               oneIndex = i
               twoIndex = j
               threeIndex = k
-              breadcrumb.push(item.title)
+              breadcrumb.push(item.title, twoItem.title, threeItem.title)
               break outerLoop
             }
           }
